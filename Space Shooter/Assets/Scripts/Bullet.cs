@@ -19,13 +19,12 @@ public class Bullet : MonoBehaviour
     {
         if (other.CompareTag("Enemy"))
         {
-
             Asteroid a = other.GetComponent<Asteroid>();
 
             if (a != null)
             {
                 GameManager.Instance.AddScore(10);
-                Destroy(other.gameObject);
+                a.Die();
             }
 
             Destroy(gameObject);

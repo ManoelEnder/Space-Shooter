@@ -8,6 +8,10 @@ public class PlayerShoot : MonoBehaviour
     public float fireRate = 0.18f;
     float nextFire = 0f;
 
+    public AudioSource audioSource;
+    public AudioClip tiroSom;
+    public AudioClip explosaoSom;
+
     void Update()
     {
         bool fire = false;
@@ -31,9 +35,15 @@ public class PlayerShoot : MonoBehaviour
         {
             if (bulletPrefab != null && firePoint != null)
             {
+                audioSource.PlayOneShot(tiroSom);
                 Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
                 nextFire = Time.time + fireRate;
             }
         }
+    }
+
+    public void ExplodirAsteroide()
+    {
+        audioSource.PlayOneShot(explosaoSom);
     }
 }

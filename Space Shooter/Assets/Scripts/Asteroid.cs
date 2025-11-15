@@ -6,6 +6,9 @@ public class Asteroid : MonoBehaviour
     public float speedMax = 7f;
     public float lifeTime = 10f;
 
+    public AudioClip explodeSound;      
+    AudioSource audioSource;            
+
     Rigidbody2D rb;
     int hp = 1;
     bool hasInit = false;
@@ -13,9 +16,11 @@ public class Asteroid : MonoBehaviour
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        audioSource = GetComponent<AudioSource>();
+
         if (rb == null)
         {
-            Debug.LogError("Asteroid: Rigidbody2D faltando no prefab! Adicione Rigidbody2D.");
+            Debug.LogError("Asteroid: Rigidbody2D faltando!");
             Destroy(gameObject);
             return;
         }
@@ -24,6 +29,7 @@ public class Asteroid : MonoBehaviour
     void Start()
     {
         Destroy(gameObject, lifeTime);
+
         if (!hasInit)
         {
             Vector2 fallback = Vector2.down;
@@ -37,8 +43,9 @@ public class Asteroid : MonoBehaviour
         hasInit = true;
         transform.localScale = Vector3.one * size;
         hp = Mathf.Max(1, Mathf.RoundToInt(size));
-        float s = speedOverride > 0f ? speedOverride : Random.Range(speedMin, speedMax);
-        if (rb == null) rb = GetComponent<Rigidbody2D>();
+
+        float s = speedOverride > 0 ? speedOverride : Random.Range(speedMin, speedMax);
+
         if (rb != null)
         {
             rb.linearVelocity = direction.normalized * s;
@@ -52,19 +59,40 @@ public class Asteroid : MonoBehaviour
         {
             PlayerHealth ph = other.GetComponent<PlayerHealth>();
             if (ph != null) ph.TakeDamage(1);
-            Destroy(gameObject);
-            return;
+
+            Die();
         }
 
         if (other.CompareTag("Bullet"))
         {
             hp--;
             Destroy(other.gameObject);
+
             if (hp <= 0)
             {
-                if (GameManager.Instance != null) GameManager.Instance.AddScore(10);
-                Destroy(gameObject);
+                GameManager.Instance?.AddScore(10);
+                Die();
             }
         }
+    }
+
+    public void Die()
+    {
+        if (explodeSound != null)
+        {
+            AudioSource.PlayClipAtPoint(explodeSound, Camera.main != null ? Camera.main.transform.position : transform.position);
+        }
+
+        ScreenShake.Instance?.Shake(0.15f, 0.1f);
+
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null) sr.enabled = false;
+
+        var col = GetComponent<Collider2D>();
+        if (col != null) col.enabled = false;
+
+        if (rb != null) rb.linearVelocity = Vector2.zero;
+
+        Destroy(gameObject, 0.1f); 
     }
 }
